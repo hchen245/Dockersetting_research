@@ -1,0 +1,48 @@
+rules:
+  # XSS Detection
+  - id: xss-innerHTML
+    pattern: |
+      $X.innerHTML = $Y
+    message: "Potential XSS vulnerability: innerHTML used with user input"
+    languages: [javascript]
+    severity: HIGH
+
+  # Code Injection
+  - id: code-injection-eval
+    pattern: |
+      eval($X)
+    message: "Code injection vulnerability: eval() used"
+    languages: [javascript]
+    severity: CRITICAL
+
+  # Path Traversal
+  - id: path-traversal-fs
+    pattern: |
+      fs.readFile($X)
+    message: "Potential path traversal: fs.readFile used with user input"
+    languages: [javascript]
+    severity: HIGH
+
+  # Open Redirect
+  - id: open-redirect
+    pattern: |
+      res.redirect($X)
+    message: "Potential open redirect: redirect with user-controlled URL"
+    languages: [javascript]
+    severity: MEDIUM
+
+  # Prototype Pollution
+  - id: prototype-pollution
+    pattern: |
+      Object.assign($OBJ, $USER_INPUT)
+    message: "Prototype pollution: Object.assign with user input"
+    languages: [javascript]
+    severity: HIGH
+
+  # Insecure Cookies
+  - id: insecure-cookie
+    pattern: |
+      res.cookie($KEY, $VALUE)
+    message: "Insecure cookie: missing HttpOnly/Secure flags"
+    languages: [javascript]
+    severity: MEDIUM
