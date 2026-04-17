@@ -1,0 +1,87 @@
+# TEMPLATE: Modify PROJECT_NAME, ports, and paths for each new project
+version: '3.9'
+
+# ⚙️ Configuration: Change these for each project
+x-common-env: &common-env
+  PROJECT_NAME: "ai-generated-project"  # 👈 change project name
+  NODE_ENV: development
+  SCAN_MODE: full
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: ${PROJECT_NAME:-dom}-frontend  # 👈 automatically use the project name
+    ports:
+      - "8080:3000"  # 👈 change port（8080, 8081, 8082...）
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 50
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+
+  # Backend service with vulnerabilities
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: ${PROJECT_NAME:-dom}-backend  # 👈 automatically use the project name
+    ports:
+      - "8000:5000"  # 👈 change port（8000, 8001, 8002...）
+    environment:
+      <<: *common-env
+      PORT: 5000
+    networks:
+      - app-network
+    volumes:
+      - ./data:/app/data:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 100
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+
+  # Security scanner
+  scanner:
+    build:
+      context: .
+      dockerfile: Dockerfile.scanner
+    container_name: ${PROJECT_NAME:-dom}-scanner  # 👈 automatically use the project name
+    volumes:
+      - ./src:/code:ro
+      - ./scan-results:/scan/results
+    environment:
+      <<: *common-env
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 256m
+    cpus: 0.25
+    read_only: true
+    tmpfs:
+      - /tmp
+
+networks:
+  app-network:
+    driver: bridge

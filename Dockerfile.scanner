@@ -1,0 +1,35 @@
+# Dockerfile for Vulnerability Scanning
+# Runs security analysis on generated code
+
+FROM python:3.10-slim
+
+WORKDIR /scan
+
+# Install security scanning tools
+RUN pip install --no-cache-dir \
+    semgrep \
+    bandit \
+    pip-audit
+
+# Install Node.js for JS scanning
+RUN apt-get update && apt-get install -y \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create scan results directory
+RUN mkdir -p /scan/results
+
+# Create non-root user
+RUN useradd -m -u 1001 scanner
+USER scanner
+
+# Copy semgrep rules
+COPY .semgrep.yml /scan/
+
+# Ensure tmp is writable for semgrep cache
+ENV HOME=/tmp
+
+# Entry point - disable metrics to avoid config dir issues
+ENTRYPOINT ["semgrep", "scan", "--config=/scan/.semgrep.yml", "--json", "--metrics=off"]
+CMD ["/code"]

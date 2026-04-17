@@ -1,0 +1,30 @@
+# Backend Dockerfile - Intentional Vulnerabilities for Research
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy backend files
+COPY src/api/vulnerableServer.js ./server.js
+COPY package*.json ./
+
+# Install dependencies (minimal)
+RUN npm install express --save && npm install
+
+# Create necessary directories
+RUN mkdir -p /app/data
+
+# Create non-root user for security
+RUN adduser -D -u 1001 appuser && \
+    chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 5000
+
+# Set environment
+ENV NODE_ENV=development
+
+# Start server
+CMD ["node", "server.js"]
